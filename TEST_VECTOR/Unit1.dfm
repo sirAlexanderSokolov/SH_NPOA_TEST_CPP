@@ -29,6 +29,7 @@ object Form1: TForm1
     Width = 786
     Height = 561
     Transparent = True
+    OnMouseDown = Image1MouseDown
   end
   object Panel1: TPanel
     Left = 8

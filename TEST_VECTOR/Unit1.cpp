@@ -1,4 +1,5 @@
 //---------------------------------------------------------------------------
+#define PRIM1 canv1->PMap
 
 #include <vcl.h>
 
@@ -125,7 +126,7 @@ canv1 = new NCanvas;
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormClose(TObject *Sender, TCloseAction &Action)
 {
-delete canv1
+delete canv1;
 for (int i=0;i<clr;i++)delete Shape[i];
 }
 //---------------------------------------------------------------------------
@@ -151,5 +152,19 @@ void __fastcall TForm1::SpeedButton3Click(TObject *Sender)
 mode = 3;
 }
 //---------------------------------------------------------------------------
-
+void __fastcall TForm1::Image1MouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
+          int X, int Y)
+{
+if ((mode >= 0)	&& (mode <100)) //если активен режим рисования
+{
+			prim1 = new NPrim; //создаем примитив-объект
+			pcur = canv1->p_count; //берем индекс этого объекта как текущий
+			PRIM1[pcur].type=mode; //определяем что будем рисовать
+			PRIM1[pcur]=*prim1; //записываем примитив в контейнер
+			PRIM1[pcur].p_x=X; //координаты начала
+			PRIM1[pcur].p_y=Y;
+			PRIM1[pcur].bcolor=Form1->Shape1->Brush->Color; //условно
+}
+}
+//---------------------------------------------------------------------------
 

@@ -30,6 +30,8 @@ __published:	// IDE-managed Components
 	void __fastcall SpeedButton2Click(TObject *Sender);
 	void __fastcall SpeedButton3Click(TObject *Sender);
 	void __fastcall FormCreate(TObject *Sender);
+	void __fastcall Image1MouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
+          int X, int Y);
 
 
 
