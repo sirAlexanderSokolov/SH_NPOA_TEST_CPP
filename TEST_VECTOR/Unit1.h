@@ -25,6 +25,7 @@ __published:	// IDE-managed Components
 	TMemo *Memo1;
 	TLabel *Label1;
 	TImage *Image1;
+	TLabel *Label2;
 	void __fastcall FormClose(TObject *Sender, TCloseAction &Action);
 	void __fastcall SpeedButton1Click(TObject *Sender);
 	void __fastcall SpeedButton2Click(TObject *Sender);
@@ -32,6 +33,14 @@ __published:	// IDE-managed Components
 	void __fastcall FormCreate(TObject *Sender);
 	void __fastcall Image1MouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
           int X, int Y);
+	void __fastcall Image1MouseMove(TObject *Sender, TShiftState Shift, int X, int Y);
+	void __fastcall Image1MouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
+          int X, int Y);
+	void __fastcall FormMouseMove(TObject *Sender, TShiftState Shift, int X, int Y);
+	void __fastcall FormMouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
+          int X, int Y);
+
+
 
 
 
@@ -39,6 +48,7 @@ __published:	// IDE-managed Components
 private:	// User declarations
 
 public:		// User declarations
+bool test;
 
 	__fastcall TForm1(TComponent* Owner);
 };

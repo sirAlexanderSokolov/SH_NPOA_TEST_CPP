@@ -14,6 +14,8 @@ object Form1: TForm1
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
+  OnMouseDown = FormMouseDown
+  OnMouseMove = FormMouseMove
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -24,12 +26,21 @@ object Form1: TForm1
     Caption = 'Label1'
   end
   object Image1: TImage
-    Left = 111
-    Top = 8
-    Width = 786
-    Height = 561
+    Left = 776
+    Top = 520
+    Width = 121
+    Height = 49
     Transparent = True
     OnMouseDown = Image1MouseDown
+    OnMouseMove = Image1MouseMove
+    OnMouseUp = Image1MouseUp
+  end
+  object Label2: TLabel
+    Left = 15
+    Top = 458
+    Width = 31
+    Height = 13
+    Caption = 'Label1'
   end
   object Panel1: TPanel
     Left = 8
@@ -68,6 +79,7 @@ object Form1: TForm1
       Top = 232
       Width = 57
       Height = 49
+      Brush.Color = clRed
       Shape = stCircle
     end
   end

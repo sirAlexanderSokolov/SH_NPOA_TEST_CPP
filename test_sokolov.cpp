@@ -144,10 +144,9 @@ NBorder ()
 class NCanvas : public NPrim {
 public: 
 	int p_count; //общее число примитивов на рисунке
-	map<int, NPriml> PMap; //контейнер для хранения и обращения к примитивам вида: индекс - примитив
-	void CClear(); //очистка холста
-	void Draw_Pic(); //отрисовка всех примитивов
-	int PickP(int x, int y); //выбор примитива для редактирования
+	map<int, NPrim> PMap; //контейнер для хранения и обращения к примитивам вида: индекс - примитив
+	//void Draw_Pic(); //отрисовка всех примитивов
+	//int PickP(int x, int y); //выбор примитива для редактирования
 	
 NCanvas() 
 	{
@@ -155,23 +154,19 @@ NCanvas()
 	this->p_count = 0;
 	this->bcolor =  clwhite;
 	//e.t.c
-	CClear();	
+	glib::paint(this); //перерисовываем = очищаем холст		
 	}
 ~NCanvas()
 	{
 	for (int i=0; i<PMap.size(); i++) delete PMap[i]; //очищаем контейнер, освобождаем память
 	PMap.clear;
 	}
-void CClear()
-	{
-	glib::paint(this); //отрисовываем холст	
-	}
 void Draw_Pic()
 	{
-	CClear(); //очищаем холст
-	for (int i=0; i<PMap.size(); i++) delete PMap[i]; glib::paint(PMap[i]); //перерисовываем объекты
+	glib::paint(this); //перерисовываем = очищаем холст
+	for (int i=0; i<PMap.size(); i++) glib::paint(PMap[i]); //перерисовываем объекты
 	}
-int PickP(int x, int y); //выделение примитива на холсте для редактирования - выбор его индекса
+int PickP(int x, int y) //выделение примитива на холсте для редактирования - выбор его индекса
 	{
 	for(int i=PMap.size(); i>=0) //можно оптимизировать - вынести в базовый класс 
 		{
@@ -218,27 +213,27 @@ void Form1::Button1Click() //можно оптимизировать
 mode=0; //включаем режим рисования прямоугольника	
 }
 //-------------------
-void Form1::Button1Click()
+void Form1::Button2Click()
 {
 mode=1; //включаем режим рисования окружности	
 }
 //-------------------
-void Form1::Button1Click()
+void Form1::Button3Click()
 {
 mode=2; //включаем режим рисования точки	
 }
 //-------------------
 void Form1::MK_Down(int x,int y) //лкм нажата в точке канвы (x;y)
 {
-if ((mode >= 0)	&& (mode <100) //если активен режим рисования
+if ((mode >= 0)	&& (mode <100)) //если активен режим рисования
 {
 			prim1 = new NPrim; //создаем примитив-объект
 			pcur = canv1->p_count; //берем индекс этого объекта как текущий
-			PRIM [pcur].type=mode; //определяем что будем рисовать
+			PRIM1[pcur].type=mode; //определяем что будем рисовать
 			PRIM1[pcur]=prim1; //записываем примитив в контейнер
 			PRIM1[pcur].p_x=x; //координаты начала
 			PRIM1[pcur].p_y=y;
-			PRIM [pcur].bcolor=colorbox1->color; //условно	
+			PRIM1[pcur].bcolor=colorbox1->color; //условно	
 }
 else
 {
@@ -271,7 +266,7 @@ switch (mode): //пространство для дальнейших измен
 //-------------------
 void Form1::M_Move(int x,int y) //курсор передвинулся по канве, сейчас в точке (x;y)
 {
-if ((mode >= 0)	&& (mode <100) //режим рисования
+if ((mode >= 0)	&& (mode <100)) //режим рисования
 {
 	PRIM1[pcur].p_w=PRIM1[pcur].p_x+x; //изменяем параметры объекта
 	PRIM1[pcur].p_h=PRIM1[pcur].p_y+y;
@@ -286,8 +281,8 @@ switch (mode): //пространство для дальнейших измен
 		{
 		PRIM1[pcur].p_x=x; 
 		PRIM1[pcur].p_y=y;
-		PRIM1[pcur].p_w=PRIM1[pcur].p_x+x;
-		PRIM1[pcur].p_h=PRIM1[pcur].p_y+y;
+		PRIM1[pcur].p_w=x-PRIM1[pcur].p_x;
+		PRIM1[pcur].p_h=y-PRIM1[pcur].p_y;
 		glib::modify(&PRIM1[pcur],ctr_tmp1,true); /*!!!!!!!!!!!!*/
 		canv1->Draw_Pic(); //перерисовываем канву
 		}
@@ -298,11 +293,11 @@ switch (mode): //пространство для дальнейших измен
 //-------------------
 void Form1::MK_Up(int x,int y) //лкм отпущена в точке канвы (x;y)
 {
-if ((mode >= 0)	&& (mode <100) //режим рисования
+if ((mode >= 0)	&& (mode <100)) //режим рисования
 {
 	Form1->M_Move(x,y);
-	p_count++;
-	p_cur=-1;
+	canv1->p_count++;
+	pcur=-1;
 	mode=100;	
 }
 else
