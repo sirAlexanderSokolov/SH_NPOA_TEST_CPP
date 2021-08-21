@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
-#define PRIM1 canv1->PMap
 #include <vcl.h>
+#include <math.h>
 
 #pragma hdrstop
 
@@ -11,7 +11,7 @@
 
 //функции поворота
 //увеличить область захвата примитива
-//перемещение
+//если рисуют справа налево снизу вверх
 
 TForm1 *Form1;
 
@@ -33,8 +33,10 @@ map<int, NPrim*> PMap; //контейнер для хранения и обращения к примитивам вида: и
 int mode=100; //модификатор рисования фигур
 int p_cur=-1; //выбранный пользователем для работы примитив
 bool protect=false; //чтобы не спамились объекты при зажатии лкм
-int dragstate=0; //состояние редактирования
-
+int dragstate=0; //состояние редактированияm
+int tmp_X=0; //координаты для перемещения объектов
+int tmp_Y=0;
+//---------------------------------------------------------------------------
 void PDraw()  //функция отрисовки примитивов
 {
 for (int i = 0; i < PMap.size(); i++)
@@ -44,16 +46,21 @@ for (int i = 0; i < PMap.size(); i++)
 		switch (PMap[i]->type)
 		{
 		case 0: Form1->Canvas->Rectangle(PMap[i]->p_x,PMap[i]->p_y,(PMap[i]->p_x+PMap[i]->p_w),(PMap[i]->p_y+PMap[i]->p_h));
-		break;
+		break;//прямоуг
 		case 1: Form1->Canvas->Ellipse(PMap[i]->p_x,PMap[i]->p_y,(PMap[i]->p_x+PMap[i]->p_w),(PMap[i]->p_y+PMap[i]->p_h));
-		break;
-		case 2: Form1->Canvas->Ellipse(PMap[i]->p_x,PMap[i]->p_y,(PMap[i]->p_x+4),(PMap[i]->p_y+4));
+		break;  //эллипс
+		case 2:
+			{   //тчк
+			Form1->Canvas->Ellipse(PMap[i]->p_x,PMap[i]->p_y,(PMap[i]->p_x+4),(PMap[i]->p_y+4));
+			PMap[i]->p_w=4;
+            PMap[i]->p_h=4;
+			}
 		break;
 		default:;
 		}
 	}
 }
-
+//---------------------------------------------------------------------------
 int PickP(int x, int y)//выделение примитива на холсте для редактирования - выбор его индекса
 	{
 	for(int i=PMap.size()-1; i>=1;i--) //можно оптимизировать - вынести в базовый класс
@@ -62,7 +69,7 @@ int PickP(int x, int y)//выделение примитива на холсте для редактирования - выбо
 		else if ((x>=PMap[i]->p_x) && (x<=PMap[i]->p_x+PMap[i]->p_w) &&	(y>=PMap[i]->p_y) && (y<=PMap[i]->p_y+PMap[i]->p_h))return i;
 		}
 	}
-
+//---------------------------------------------------------------------------
 void BSet(bool Default)  //вычисление параметров рамки
 {
 if (Default==true)
@@ -105,7 +112,7 @@ __fastcall TForm1::TForm1(TComponent* Owner)
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormCreate(TObject *Sender)
 {
-Form1->DoubleBuffered=true;
+Form1->DoubleBuffered=true;   //буферизация графики
 
 PMap[0]=new NPrim;      //канва
 PMap[0]->type=0;
@@ -120,7 +127,7 @@ PMap[1]=new NPrim;     //элемент для редактирования
 PMap[1]->type=0;
 PMap[1]->bcolor=clWhite;
 PMap[1]->pcolor=clBlue;
-BSet(true);
+BSet(true);   //дефолтные параметры рамки редактирования объекта
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormPaint(TObject *Sender)
@@ -178,11 +185,8 @@ switch (mode) //пространство для дальнейших изменений
 		if (PickP(X,Y) >= 2) // если пользователь выбрал объект для редактирования
 			{
 			p_cur=PickP(X,Y);
-			PMap[1]->p_x=PMap[p_cur]->p_x-5;
-			PMap[1]->p_y=PMap[p_cur]->p_y-5;
-			PMap[1]->p_w=PMap[p_cur]->p_w+10;
-			PMap[1]->p_h=PMap[p_cur]->p_h+10;    //отрисовываем элементы редактирования
-			PDraw();
+			BSet(false);  //отрисовываем элементы редактирования
+			PDraw();      //---/---
 			mode=101; //включаем режим активного элемента редактирования
 			}
 		}
@@ -207,6 +211,15 @@ switch (mode) //пространство для дальнейших изменений
 			{  //верт-лево
 			dragstate=5;  //можно растягвать и зажата ЛКМ
 			}
+		else if ((X > ::ceil(float(PMap[1]->p_w/2 + PMap[1]->p_x-10)))
+		&& (X < ::ceil(float(PMap[1]->p_w/2 + PMap[1]->p_x+10)))
+		&& (Y > ::ceil(float(PMap[1]->p_h/2 + PMap[1]->p_y-10)))
+		&& (Y < ::ceil(float(PMap[1]->p_h/2 + PMap[1]->p_y+10))))
+			{
+			dragstate=6;  //можно растягвать и зажата ЛКМ
+			tmp_X=X;
+			tmp_Y=Y;
+			}
 		}
 		else mode = 100;
 		}
@@ -228,26 +241,34 @@ else
 switch (mode) //пространство для дальнейших изменений
 	{
 	case 100: //если пользователь кликнул в "пустом" режиме
-		{
-		}
-		break;
+	break;
 	case 101: //если пользователь навел мышь в режиме активного элемента редактирования
-		{
+	{
 	switch (dragstate)
 	{
 	case 0: case 1:  //если мышь наведена на элемент редактирования
 	{
-	if (((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y)) || ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h)))
-		{   //выбор горизонтальной линии
-		Form1->Cursor=-7; //меняем курсор
+	if (((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y))
+	   || ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h)))
+		{   //навели на горизонтальную линии
+		Form1->Cursor=-15; //меняем курсор
 		dragstate=1;  //разрешаем растягвать
 		}
-		else if (((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x)) || ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x+PMap[1]->p_w)))
-		{  //выбор вертикальной линии
-		Form1->Cursor=-9; //меняем курсор
+	else if (((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x))
+	   || ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x+PMap[1]->p_w)))
+		{  //навели на вертикальную линии
+		Form1->Cursor=-14; //меняем курсор
 		dragstate=1;   //разрешаем растягвать
 		}
-		else
+	else if ((X > ::ceil(float(PMap[1]->p_w/2 + PMap[1]->p_x-10)))
+		&& (X < ::ceil(float(PMap[1]->p_w/2 + PMap[1]->p_x+10)))
+		&& (Y > ::ceil(float(PMap[1]->p_h/2 + PMap[1]->p_y-10)))
+		&& (Y < ::ceil(float(PMap[1]->p_h/2 + PMap[1]->p_y+10))))
+		{      //перемещение
+		Form1->Cursor=-22;  //меняем курсор
+		dragstate=1;   //разрешаем перемещать
+		}
+	else
 		{
 		Form1->Cursor=0; //ушли от нужной линии - дефолтный курсор
 		dragstate=0;  //нельзя растягвать
@@ -261,29 +282,39 @@ switch (mode) //пространство для дальнейших изменений
 		BSet(false);
 		PDraw();
 		}
-		break;
+	break;
 	case 3:    //вниз
 		{
 		PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
 		BSet(false);
 		PDraw();
 		}
-		break;
+	break;
 	case 4:    //вправо
 		{
 		PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
 		BSet(false);
 		PDraw();
 		}
-		break;
+	break;
 	case 5:   //влево
 		{
-        PMap[p_cur]->p_w=(PMap[p_cur]->p_w-(X-PMap[p_cur]->p_x));
+		PMap[p_cur]->p_w=(PMap[p_cur]->p_w-(X-PMap[p_cur]->p_x));
 		PMap[p_cur]->p_x=X;
-        BSet(false);
+		BSet(false);
 		PDraw();
 		}
-    break;
+	break;
+	case 6:   //перемещаем
+		{
+		PMap[p_cur]->p_x+=X-tmp_X;
+		PMap[p_cur]->p_y+=Y-tmp_Y;
+		tmp_X=X;
+		tmp_Y=Y;
+		BSet(false);
+		PDraw();
+		}
+	break;
 	default:;
 	}
 	break;
@@ -291,10 +322,6 @@ switch (mode) //пространство для дальнейших изменений
 	}
 	}
 }
-Memo1->Clear();
-Memo1->Lines->Add("mode  " + IntToStr(mode));
-Memo1->Lines->Add("p_cur  " + IntToStr(p_cur));
-Memo1->Lines->Add("drags  " + IntToStr(dragstate));
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormMouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
@@ -304,39 +331,19 @@ if ((mode >= 0)	&& (mode <100)&& (protect==false)) //если активен режим рисовани
 	{
 	PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;   //заканчиваем рисовать примитив
 	PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
-	PDraw();
-	p_cur=-1;
-	mode=100;
 	protect=true;
+    p_cur=-1;
+	mode=100;
 	}
-else
+else if (((dragstate>=2)&&(mode==101))||(mode==100))
 {
-switch (mode) //пространство для дальнейших изменений
-{
-	case 100: //если пользователь кликнул в "пустом" режиме
-		{
-		BSet(true);
-		p_cur=-1;
-		mode=100;
-		PDraw();
-		Form1->Cursor=0;
-		dragstate=0;
-		}
-		break;
-	case 101: //если пользователь кликнул в режиме активного элемента редактирования
-	{
-		if (dragstate>=2)
-		{
-		BSet(true);
-		p_cur=-1;
-		mode=100;
-		PDraw();
-		Form1->Cursor=0;
-		dragstate=0;
-		}
-	}
+BSet(true);
+dragstate=0;
+Form1->Cursor=0;
+p_cur=-1;
+mode=100;
 }
-}
+PDraw();
 }
 //---------------------------------------------------------------------------
 
