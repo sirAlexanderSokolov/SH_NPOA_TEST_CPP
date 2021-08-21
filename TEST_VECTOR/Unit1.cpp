@@ -11,7 +11,7 @@
 
 //функции поворота
 //увеличить область захвата примитива
-//если рисуют справа налево снизу вверх поправить выделение редактора
+//если рисуют справа налево снизу вверх поправить редактирование
 
 TForm1 *Form1;
 
@@ -116,6 +116,34 @@ else
 }
 }
 //---------------------------------------------------------------------------
+int BSel (NPrim *PR, int X, int Y)   //вычисление стороны редактора за которую т€нет пользователь
+{
+if  (
+    ((PR->p_w<0)&&(PR->p_h<0)&&(X<PR->p_x)&&(X>PR->p_x+PR->p_w)&&(Y==PR->p_y+PR->p_h))||    //гор верх w< h<
+    ((PR->p_w<0)&&(PR->p_h>0)&&(X<PR->p_x)&&(X>PR->p_x+PR->p_w)&&(Y==PR->p_y)) ||           //гор верх w< h>
+    ((X>PR->p_x)&&(X<PR->p_x+PR->p_w)&&(Y==PR->p_y))                                        //гор верх w> h>
+)return 1;
+
+else if	(
+    ((PR->p_w<0)&&(PR->p_h<0)&&(X<PR->p_x)&&(X>PR->p_x+PR->p_w)&&(Y==PR->p_y)) ||           //гор низ w< h<
+    ((PR->p_w<0)&&(PR->p_h>0)&&(X<PR->p_x)&&(X>PR->p_x+PR->p_w)&&(Y==PR->p_y+PR->p_h)) ||   //гор низ w< h>
+    ((X>PR->p_x)&&(X<PR->p_x+PR->p_w)&&(Y==PR->p_y+PR->p_h))                                //гор низ w> h>
+)return 2;
+
+else if (
+	((PR->p_w<0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&&(X==PR->p_x+PR->p_w))||   //верх лево h< w<
+	((PR->p_w>0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&&(X==PR->p_x))||              //верх лево h< w>
+    ((Y>PR->p_y)&&(Y<PR->p_y+PR->p_h)&&(X==PR->p_x))                                                    //верх лево h> w>
+)return 3;
+
+else if (
+((PR->p_w<0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&&(X==PR->p_x)) ||             //верх право h<  w<
+((PR->p_w>0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&& (X==PR->p_x+PR->p_w))||  //верх право h<  w>
+((Y>PR->p_y)&&(Y<PR->p_y+PR->p_h)&&(X==PR->p_x+PR->p_w))                                     //верх право h> w>
+)return 4;
+else return 0;
+}
+//---------------------------------------------------------------------------
 __fastcall TForm1::TForm1(TComponent* Owner)
 	: TForm(Owner)
 {
@@ -207,19 +235,19 @@ switch (mode) //пространство дл€ дальнейших изменений
 		{
 		if (dragstate==1)    //если курсор на элементе редактировани€
 		{
-		if ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y))
+		if (BSel(PMap[1],X,Y)==1)
 			{  //гориз-верх
 			dragstate=2;  //можно раст€гвать и зажата Ћ ћ
 			}
-		else if ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h))
+		else if (BSel(PMap[1],X,Y)==2)
 			{  //гориз-низ
 			dragstate=3;  //можно раст€гвать и зажата Ћ ћ
 			}
-		else if ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x+PMap[1]->p_w))
+		else if (BSel(PMap[1],X,Y)==3)
 			{  //верт-право
 			dragstate=4;  //можно раст€гвать и зажата Ћ ћ
 			}
-		else if ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x))
+		else if (BSel(PMap[1],X,Y)==4)
 			{  //верт-лево
 			dragstate=5;  //можно раст€гвать и зажата Ћ ћ
 			}
@@ -235,7 +263,7 @@ switch (mode) //пространство дл€ дальнейших изменений
 		}
 		else mode = 100;
 		}
-        break;
+		break;
 	}
 }
 }
@@ -260,109 +288,12 @@ switch (mode) //пространство дл€ дальнейших изменений
 	{
 	case 0: case 1:  //если мышь наведена на элемент редактировани€
 	{
-    Form1->Memo1->Clear();
-		Form1->Memo1->Lines->Add(PMap[1]->p_x);
-		Form1->Memo1->Lines->Add(PMap[1]->p_y);
-		Form1->Memo1->Lines->Add(PMap[1]->p_w);
-		Form1->Memo1->Lines->Add(PMap[1]->p_h);
-Form1->Memo1->Lines->Add(X);
-Form1->Memo1->Lines->Add(Y);
-
-	if (
-	(
-	(PMap[1]->p_w<0)&&
-	(PMap[1]->p_h<0)&&                                  //гор верх w< h<
-	(X<PMap[1]->p_x)&&
-	(X>PMap[1]->p_x+PMap[1]->p_w)&&
-	(Y==PMap[1]->p_y+PMap[1]->p_h)
-	)
-	||
-	(
-	(PMap[1]->p_w<0)&&
-	(PMap[1]->p_h<0)&&                                  //гор низ w<  h<
-	(X<PMap[1]->p_x)&&
-	(X>PMap[1]->p_x+PMap[1]->p_w)&&
-	(Y==PMap[1]->p_y)
-	)
-	||
-	(
-	(PMap[1]->p_w<0)&&
-	(PMap[1]->p_h>0)&&                                  //гор верх w<  h>    !!
-	(X<PMap[1]->p_x)&&
-	(X>PMap[1]->p_x+PMap[1]->p_w)&&
-	(Y==PMap[1]->p_y)
-	)
-	||
-	(
-	(PMap[1]->p_w<0)&&
-	(PMap[1]->p_h>0)&&                                  //гор низ w<  h>  !!
-	(X<PMap[1]->p_x)&&
-	(X>PMap[1]->p_x+PMap[1]->p_w)&&
-	(Y==PMap[1]->p_y+PMap[1]->p_h)
-	)
-	||
-	(
-	(X>PMap[1]->p_x)&&
-	(X<PMap[1]->p_x+PMap[1]->p_w)&&                      //гор верх w> h>
-	(Y==PMap[1]->p_y)
-	)
-	||
-	(
-	(X>PMap[1]->p_x)&&
-	(X<PMap[1]->p_x+PMap[1]->p_w)&&
-	(Y==PMap[1]->p_y+PMap[1]->p_h)                       //гор низ w>  h>
-	)
-	)
+	if ((BSel(PMap[1],X,Y)==1)||(BSel(PMap[1],X,Y)==2))
 		{   //навели на горизонтальную линии;
 		Form1->Cursor=-15; //мен€ем курсор
 		dragstate=1;  //разрешаем раст€гвать
 		}
-	else if
-	(
-	(
-	(Y>PMap[1]->p_y)&&
-	(Y<PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h> w>
-	(X==PMap[1]->p_x)
-	)
-	||
-	(
-	(Y>PMap[1]->p_y)&&
-	(Y<PMap[1]->p_y+PMap[1]->p_h)&&                    //верт право h> w>
-	(X==PMap[1]->p_x+PMap[1]->p_w)
-	)
-	||
-	(
-	(PMap[1]->p_w<0)&&
-	(PMap[1]->p_h<0)&&
-	(Y<PMap[1]->p_y)&&
-	(Y>PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h< w<
-	(X==PMap[1]->p_x+PMap[1]->p_w)
-	)
-	||
-	(
-	(PMap[1]->p_w<0)&&
-	(PMap[1]->p_h<0)&&
-	(Y<PMap[1]->p_y)&&
-	(Y>PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h<  w<
-	(X==PMap[1]->p_x)
-	)
-	||
-	(
-	(PMap[1]->p_w>0)&&
-	(PMap[1]->p_h<0)&&
-	(Y<PMap[1]->p_y)&&
-	(Y>PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h< w>
-	(X==PMap[1]->p_x)
-	)
-	||
-	(
-	(PMap[1]->p_w>0)&&
-	(PMap[1]->p_h<0)&&
-	(Y<PMap[1]->p_y)&&
-	(Y>PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h<  w>
-	(X==PMap[1]->p_x+PMap[1]->p_w)
-	)
-    )
+	else if ((BSel(PMap[1],X,Y)==3)||(BSel(PMap[1],X,Y)==4))
 		{  //навели на вертикальную линии
 		Form1->Cursor=-14; //мен€ем курсор
 		dragstate=1;   //разрешаем раст€гвать
@@ -412,7 +343,7 @@ Form1->Memo1->Lines->Add(Y);
 		PDraw();
 		}
 	break;
-	case 6:   //перемещаем
+	case 6:   //двигаем объект
 		{
 		PMap[p_cur]->p_x+=X-tmp_X;
 		PMap[p_cur]->p_y+=Y-tmp_Y;
@@ -444,7 +375,7 @@ if ((mode >= 0)	&& (mode <100)&& (protect==false)) //если активен режим рисовани
 	mode=100;
 
 	}
-else if (((dragstate>=2)&&(mode==101))||(mode==100))
+else if (((dragstate>=2)&&(mode==101))||(mode==100))     //заканчиваем редактирование
 {
 BSet(true);
 dragstate=0;
@@ -452,13 +383,6 @@ Form1->Cursor=0;
 p_cur=-1;
 mode=100;
 }
-Form1->Memo1->Clear();
-		Form1->Memo1->Lines->Add(PMap[1]->p_x);
-		Form1->Memo1->Lines->Add(PMap[1]->p_y);
-		Form1->Memo1->Lines->Add(PMap[1]->p_w);
-		Form1->Memo1->Lines->Add(PMap[1]->p_h);
-Form1->Memo1->Lines->Add(X);
-Form1->Memo1->Lines->Add(Y);
 PDraw();
 }
 //---------------------------------------------------------------------------
