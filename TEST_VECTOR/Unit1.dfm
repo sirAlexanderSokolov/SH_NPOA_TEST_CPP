@@ -64,7 +64,7 @@ object Form1: TForm1
   object Memo1: TMemo
     Left = 8
     Top = 311
-    Width = 97
+    Width = 145
     Height = 202
     TabOrder = 1
   end

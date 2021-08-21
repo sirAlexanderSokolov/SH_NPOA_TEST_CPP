@@ -10,6 +10,8 @@
 #pragma resource "*.dfm"
 
 //функции поворота
+//увеличить область захвата примитива
+//перемещение
 
 TForm1 *Form1;
 
@@ -20,6 +22,7 @@ int type; //вид примитива
 	//0 - прямоугольник
 	//1 - окружность
 	//2 - точка
+//можно сделать bool enabled
 TColor bcolor, pcolor; //условно цвет заливки
 int p_x, p_y, p_w, p_h; //координаты примитива х, у, ширина и высота прямоугольника в который вписан примитив
 };
@@ -141,24 +144,24 @@ switch (mode) //пространство для дальнейших изменений
 	{
 	case 100: //если пользователь кликнул в "пустом" режиме
 		{
-
-		p_cur=PickP(X,Y);
-		if (p_cur >= 2) // если пользователь выбрал объект для редактирования
+		if (PickP(X,Y) >= 2) // если пользователь выбрал объект для редактирования
 			{
+			p_cur=PickP(X,Y);
 			PMap[1]->p_x=PMap[p_cur]->p_x-5;
 			PMap[1]->p_y=PMap[p_cur]->p_y-5;
 			PMap[1]->p_w=PMap[p_cur]->p_w+10;
 			PMap[1]->p_h=PMap[p_cur]->p_h+10;    //отрисовываем элементы редактирования
 			PDraw();
-			}
 			mode=101; //включаем режим активного элемента редактирования
 			}
+		}
 		break;
 	case 101: //если пользователь кликнул в режиме активного элемента редактирования
 		{
 		if (dragstate==1)dragstate=2;
 		else mode = 100;
 		}
+        break;
 	}
 }
 }
@@ -181,7 +184,7 @@ switch (mode) //пространство для дальнейших изменений
 		break;
 	case 101: //если пользователь кликнул в режиме активного элемента редактирования
 		{
-	if (dragstate==0)
+	if ((dragstate==0)||(dragstate==1))
 		{
 		if (((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y)) || ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h)))
 		{   //выбор горизонтальной линии  (меняем курсор)
@@ -218,7 +221,7 @@ switch (mode) //пространство для дальнейших изменений
 			PMap[1]->p_y=PMap[p_cur]->p_y-5;
 			PMap[1]->p_h=PMap[p_cur]->p_h+10;
 			}
-        else
+		else
 			{
 			PMap[1]->p_y=PMap[p_cur]->p_y+5;
 			PMap[1]->p_h=PMap[p_cur]->p_h-10;
@@ -230,6 +233,10 @@ switch (mode) //пространство для дальнейших изменений
 		}
 	}
 }
+Memo1->Clear();
+Memo1->Lines->Add("mode  " + IntToStr(mode));
+Memo1->Lines->Add("p_cur  " + IntToStr(p_cur));
+Memo1->Lines->Add("drags  " + IntToStr(dragstate));
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormMouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
@@ -244,11 +251,61 @@ if ((mode >= 0)	&& (mode <100)&& (protect==false)) //если активен режим рисовани
 	mode=100;
 	protect=true;
 	}
-if (dragstate==2)
+else
 {
-Form1->Cursor=0;
-dragstate=0;
-Memo1->Lines->Add(mode);
+switch (mode) //пространство для дальнейших изменений
+{
+	case 100: //если пользователь кликнул в "пустом" режиме
+		{
+        PMap[1]->p_x=0;
+		PMap[1]->p_y=0;
+		PMap[1]->p_w=0;
+		PMap[1]->p_h=0;
+		p_cur=-1;
+		mode=100;
+		PDraw();
+		Form1->Cursor=0;
+		dragstate=0;
+		}
+		break;
+	case 101: //если пользователь кликнул в режиме активного элемента редактирования
+	{
+        if (dragstate==2)
+		{
+		PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
+		PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
+		if (PMap[p_cur]->p_w>0)
+			{
+			PMap[1]->p_x=PMap[p_cur]->p_x-5;
+			PMap[1]->p_w=PMap[p_cur]->p_w+10;
+			}
+		else
+			{
+			PMap[1]->p_x=PMap[p_cur]->p_x+5;
+			PMap[1]->p_w=PMap[p_cur]->p_w-10;
+			}
+		if (PMap[p_cur]->p_h>0)
+			{
+			PMap[1]->p_y=PMap[p_cur]->p_y-5;
+			PMap[1]->p_h=PMap[p_cur]->p_h+10;
+			}
+		else
+			{
+			PMap[1]->p_y=PMap[p_cur]->p_y+5;
+			PMap[1]->p_h=PMap[p_cur]->p_h-10;
+			}
+		PMap[1]->p_x=0;
+		PMap[1]->p_y=0;
+		PMap[1]->p_w=0;
+		PMap[1]->p_h=0;
+		p_cur=-1;
+		mode=100;
+		PDraw();
+		Form1->Cursor=0;
+		dragstate=0;
+		}
+	}
+}
 }
 }
 //---------------------------------------------------------------------------
