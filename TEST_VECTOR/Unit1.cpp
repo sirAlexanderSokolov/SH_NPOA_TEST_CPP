@@ -116,7 +116,7 @@ protect=true;
 //---------------------------------------------------------------------------
 void __fastcall TForm1::SpeedButton3Click(TObject *Sender)
 {
-mode = 3;
+mode = 2;
 protect=true;
 }
 //---------------------------------------------------------------------------
@@ -127,7 +127,7 @@ if ((mode >= 0)	&& (mode <100)&&(protect==true)) //если активен режим рисования
 	{
 	p_cur=p_count;
 	PMap[p_cur]=new NPrim;
-	PMap[p_cur]->type=0;
+	PMap[p_cur]->type=mode;
 	PMap[p_cur]->bcolor=clWhite;
 	PMap[p_cur]->pcolor=clBlack;
 	PMap[p_cur]->p_x=X;
