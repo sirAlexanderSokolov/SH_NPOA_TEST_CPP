@@ -65,7 +65,7 @@ object Form1: TForm1
     Left = 8
     Top = 311
     Width = 97
-    Height = 122
+    Height = 202
     TabOrder = 1
   end
 end
