@@ -54,7 +54,7 @@ for (int i = 0; i < PMap.size(); i++)
 	}
 }
 
-int PickP(int x, int y) //выделение примитива на холсте дл€ редактировани€ - выбор его индекса
+int PickP(int x, int y)//выделение примитива на холсте дл€ редактировани€ - выбор его индекса
 	{
 	for(int i=PMap.size()-1; i>=1;i--) //можно оптимизировать - вынести в базовый класс
 		{
@@ -62,6 +62,40 @@ int PickP(int x, int y) //выделение примитива на холсте дл€ редактировани€ - выб
 		else if ((x>=PMap[i]->p_x) && (x<=PMap[i]->p_x+PMap[i]->p_w) &&	(y>=PMap[i]->p_y) && (y<=PMap[i]->p_y+PMap[i]->p_h))return i;
 		}
 	}
+
+void BSet(bool Default)  //вычисление параметров рамки
+{
+if (Default==true)
+{
+	PMap[1]->p_x=0;
+	PMap[1]->p_y=0;
+	PMap[1]->p_w=0;
+	PMap[1]->p_h=0;
+}
+else
+{
+if (PMap[p_cur]->p_w>0)
+	{
+	PMap[1]->p_x=PMap[p_cur]->p_x-5;
+	PMap[1]->p_w=PMap[p_cur]->p_w+10;
+	}
+else
+	{
+	PMap[1]->p_x=PMap[p_cur]->p_x+5;
+	PMap[1]->p_w=PMap[p_cur]->p_w-10;
+	}
+if (PMap[p_cur]->p_h>0)
+	{
+	PMap[1]->p_y=PMap[p_cur]->p_y-5;
+	PMap[1]->p_h=PMap[p_cur]->p_h+10;
+	}
+else
+	{
+	PMap[1]->p_y=PMap[p_cur]->p_y+5;
+	PMap[1]->p_h=PMap[p_cur]->p_h-10;
+	}
+}
+}
 //---------------------------------------------------------------------------
 __fastcall TForm1::TForm1(TComponent* Owner)
 	: TForm(Owner)
@@ -86,10 +120,7 @@ PMap[1]=new NPrim;     //элемент дл€ редактировани€
 PMap[1]->type=0;
 PMap[1]->bcolor=clWhite;
 PMap[1]->pcolor=clBlue;
-PMap[1]->p_x=0;
-PMap[1]->p_y=0;
-PMap[1]->p_w=0;
-PMap[1]->p_h=0;
+BSet(true);
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormPaint(TObject *Sender)
@@ -158,7 +189,25 @@ switch (mode) //пространство дл€ дальнейших изменений
 		break;
 	case 101: //если пользователь кликнул в режиме активного элемента редактировани€
 		{
-		if (dragstate==1)dragstate=2;
+		if (dragstate==1)    //если курсор на элементе редактировани€
+		{
+		if ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y))
+			{  //гориз-верх
+			dragstate=2;  //можно раст€гвать и зажата Ћ ћ
+			}
+		else if ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h))
+			{  //гориз-низ
+			dragstate=3;  //можно раст€гвать и зажата Ћ ћ
+			}
+		else if ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x+PMap[1]->p_w))
+			{  //верт-право
+			dragstate=4;  //можно раст€гвать и зажата Ћ ћ
+			}
+		else if ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x))
+			{  //верт-лево
+			dragstate=5;  //можно раст€гвать и зажата Ћ ћ
+			}
+		}
 		else mode = 100;
 		}
         break;
@@ -182,55 +231,64 @@ switch (mode) //пространство дл€ дальнейших изменений
 		{
 		}
 		break;
-	case 101: //если пользователь кликнул в режиме активного элемента редактировани€
+	case 101: //если пользователь навел мышь в режиме активного элемента редактировани€
 		{
-	if ((dragstate==0)||(dragstate==1))
-		{
-		if (((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y)) || ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h)))
-		{   //выбор горизонтальной линии  (мен€ем курсор)
-		Form1->Cursor=-7;
-		dragstate=1;  //можно раст€гвать
+	switch (dragstate)
+	{
+	case 0: case 1:  //если мышь наведена на элемент редактировани€
+	{
+	if (((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y)) || ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h)))
+		{   //выбор горизонтальной линии
+		Form1->Cursor=-7; //мен€ем курсор
+		dragstate=1;  //разрешаем раст€гвать
 		}
 		else if (((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x)) || ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x+PMap[1]->p_w)))
-		{  //выбор вертикальной линии (мен€ем курсор)
-		Form1->Cursor=-9;
-		dragstate=1;
+		{  //выбор вертикальной линии
+		Form1->Cursor=-9; //мен€ем курсор
+		dragstate=1;   //разрешаем раст€гвать
 		}
 		else
 		{
 		Form1->Cursor=0; //ушли от нужной линии - дефолтный курсор
-		dragstate=0;
+		dragstate=0;  //нельз€ раст€гвать
 		}
 	}
-	else if (dragstate==2)      //!!!тут
-		{
-		PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
-		PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
-		if (PMap[p_cur]->p_w>0)
-			{
-			PMap[1]->p_x=PMap[p_cur]->p_x-5;
-			PMap[1]->p_w=PMap[p_cur]->p_w+10;
-			}
-		else
-			{
-			PMap[1]->p_x=PMap[p_cur]->p_x+5;
-			PMap[1]->p_w=PMap[p_cur]->p_w-10;
-			}
-		if (PMap[p_cur]->p_h>0)
-			{
-			PMap[1]->p_y=PMap[p_cur]->p_y-5;
-			PMap[1]->p_h=PMap[p_cur]->p_h+10;
-			}
-		else
-			{
-			PMap[1]->p_y=PMap[p_cur]->p_y+5;
-			PMap[1]->p_h=PMap[p_cur]->p_h-10;
-			}
+	break;
+    case 2:
+		{      //т€нем вверх
+		PMap[p_cur]->p_h=(PMap[p_cur]->p_h-(Y-PMap[p_cur]->p_y));
+		PMap[p_cur]->p_y=Y;
+		BSet(false);
 		PDraw();
 		}
+		break;
+	case 3:    //вниз
+		{
+		PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
+		BSet(false);
+		PDraw();
+		}
+		break;
+	case 4:    //вправо
+		{
+		PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
+		BSet(false);
+		PDraw();
+		}
+		break;
+	case 5:   //влево
+		{
+        PMap[p_cur]->p_w=(PMap[p_cur]->p_w-(X-PMap[p_cur]->p_x));
+		PMap[p_cur]->p_x=X;
+        BSet(false);
+		PDraw();
+		}
+    break;
+	default:;
+	}
 	break;
 	default:;
-		}
+	}
 	}
 }
 Memo1->Clear();
@@ -257,10 +315,7 @@ switch (mode) //пространство дл€ дальнейших изменений
 {
 	case 100: //если пользователь кликнул в "пустом" режиме
 		{
-        PMap[1]->p_x=0;
-		PMap[1]->p_y=0;
-		PMap[1]->p_w=0;
-		PMap[1]->p_h=0;
+		BSet(true);
 		p_cur=-1;
 		mode=100;
 		PDraw();
@@ -270,34 +325,9 @@ switch (mode) //пространство дл€ дальнейших изменений
 		break;
 	case 101: //если пользователь кликнул в режиме активного элемента редактировани€
 	{
-        if (dragstate==2)
+		if (dragstate>=2)
 		{
-		PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
-		PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
-		if (PMap[p_cur]->p_w>0)
-			{
-			PMap[1]->p_x=PMap[p_cur]->p_x-5;
-			PMap[1]->p_w=PMap[p_cur]->p_w+10;
-			}
-		else
-			{
-			PMap[1]->p_x=PMap[p_cur]->p_x+5;
-			PMap[1]->p_w=PMap[p_cur]->p_w-10;
-			}
-		if (PMap[p_cur]->p_h>0)
-			{
-			PMap[1]->p_y=PMap[p_cur]->p_y-5;
-			PMap[1]->p_h=PMap[p_cur]->p_h+10;
-			}
-		else
-			{
-			PMap[1]->p_y=PMap[p_cur]->p_y+5;
-			PMap[1]->p_h=PMap[p_cur]->p_h-10;
-			}
-		PMap[1]->p_x=0;
-		PMap[1]->p_y=0;
-		PMap[1]->p_w=0;
-		PMap[1]->p_h=0;
+		BSet(true);
 		p_cur=-1;
 		mode=100;
 		PDraw();
