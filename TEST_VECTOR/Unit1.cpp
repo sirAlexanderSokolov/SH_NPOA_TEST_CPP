@@ -1,43 +1,67 @@
 //---------------------------------------------------------------------------
 #include <vcl.h>
-#include <math.h>
 
 #pragma hdrstop
 
 #include "Unit1.h"
+#include "Unit2.h"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
 
+//TO DO
+//зум
 //функции поворота
 //увеличить область захвата примитива
 //если рисуют справа налево снизу вверх поправить редактирование
 
 TForm1 *Form1;
-
-//-------NPrim
-class NPrim {//класс примитива
-public:
-int type; //вид примитива
-	//0 - прямоугольник
-	//1 - окружность
-	//2 - точка
-//можно сделать bool enabled
-TColor bcolor, pcolor; //условно цвет заливки
-int p_x, p_y, p_w, p_h; //координаты примитива х, у, ширина и высота прямоугольника в который вписан примитив
-};
-//-------NPrim
-
-int p_count=2; //общее число примитивов на рисунке
-map<int, NPrim*> PMap; //контейнер для хранения и обращения к примитивам вида: индекс - примитив
-int mode=100; //модификатор рисования фигур
-int p_cur=-1; //выбранный пользователем для работы примитив
-bool protect=false; //чтобы не спамились объекты при зажатии лкм
-int dragstate=0; //состояние редактированияm
-int tmp_X=0; //координаты для перемещения объектов
-int tmp_Y=0;
 //---------------------------------------------------------------------------
-void PDraw()  //функция отрисовки примитивов
+__fastcall TForm1::TForm1(TComponent* Owner)
+	: TForm(Owner)
+{
+p_count=2; //общее число примитивов на рисунке
+mode=100; //модификатор рисования фигур
+p_cur=-1; //выбранный пользователем для работы примитив
+protect=false; //чтобы не спамились объекты при зажатии лкм
+dragstate=0; //состояние редактированияm
+tmp_X=0; //координаты для перемещения объектов
+tmp_Y=0;
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::FormCreate(TObject *Sender)
+{
+Form1->DoubleBuffered=true;   //буферизация графики
+
+PMap[0]=new NPrim;      //канва
+PMap[0]->type=0;
+PMap[0]->bcolor=clWhite;
+PMap[0]->pcolor=clBlack;
+PMap[0]->p_x=0;
+PMap[0]->p_y=0;
+PMap[0]->p_w=Form1->Width;
+PMap[0]->p_h=Form1->Height;
+
+PMap[1]=new NPrim;     //элемент для редактирования
+PMap[1]->type=0;
+PMap[1]->bcolor=clWhite;
+PMap[1]->pcolor=clBlue;
+BSet(true);   		   //дефолтные параметры рамки редактирования объекта
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::FormPaint(TObject *Sender)
+{
+PDraw();  			   //отрисовываем холст
+Form2->Show();
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::FormClose(TObject *Sender, TCloseAction &Action)
+{
+for (unsigned int i = 0; i<PMap.size(); i++) delete PMap[i];
+PMap.clear();          //очищаем память
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::PDraw()  //функция отрисовки примитивов
 {
 for (int i = 0; i < PMap.size(); i++)
 	{
@@ -61,9 +85,9 @@ for (int i = 0; i < PMap.size(); i++)
 	}
 }
 //---------------------------------------------------------------------------
-int PickP(int x, int y)//выделение примитива на холсте для редактирования - выбор его индекса
+int __fastcall TForm1::PickP(int x, int y)//выделение примитива на холсте для редактирования - выбор его индекса
 {
-for(int i=PMap.size()-1; i>=1;i--) //можно оптимизировать - вынести в базовый класс
+for(int i=PMap.size()-1; i>=1;i--)
 	{
 	if (i==1) return -1;
 	else
@@ -82,7 +106,7 @@ for(int i=PMap.size()-1; i>=1;i--) //можно оптимизировать - вынести в базовый кл
 	}
 }
 //---------------------------------------------------------------------------
-void BSet(bool Default)  //вычисление параметров рамки
+void __fastcall TForm1::BSet(bool Default)  //вычисление параметров рамки
 {
 if (Default==true)
 {
@@ -116,7 +140,7 @@ else
 }
 }
 //---------------------------------------------------------------------------
-int BSel (NPrim *PR, int X, int Y)   //вычисление стороны редактора за которую тянет пользователь
+int __fastcall TForm1::BSel (NPrim *PR, int X, int Y)   //вычисление стороны редактора за которую тянет пользователь
 {
 if  (
     ((PR->p_w<0)&&(PR->p_h<0)&&(X<PR->p_x)&&(X>PR->p_x+PR->p_w)&&(Y==PR->p_y+PR->p_h))||    //гор верх w< h<
@@ -132,71 +156,16 @@ else if	(
 
 else if (
 	((PR->p_w<0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&&(X==PR->p_x+PR->p_w))||   //верх лево h< w<
-	((PR->p_w>0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&&(X==PR->p_x))||              //верх лево h< w>
-    ((Y>PR->p_y)&&(Y<PR->p_y+PR->p_h)&&(X==PR->p_x))                                                    //верх лево h> w>
+	((PR->p_w>0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&&(X==PR->p_x))||           //верх лево h< w>
+	((Y>PR->p_y)&&(Y<PR->p_y+PR->p_h)&&(X==PR->p_x))                                       //верх лево h> w>
 )return 3;
 
 else if (
-((PR->p_w<0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&&(X==PR->p_x)) ||             //верх право h<  w<
-((PR->p_w>0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&& (X==PR->p_x+PR->p_w))||  //верх право h<  w>
-((Y>PR->p_y)&&(Y<PR->p_y+PR->p_h)&&(X==PR->p_x+PR->p_w))                                     //верх право h> w>
+((PR->p_w<0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&&(X==PR->p_x)) ||          //верх право h< w<
+((PR->p_w>0)&&(PR->p_h<0)&&(Y<PR->p_y)&&(Y>PR->p_y+PR->p_h)&& (X==PR->p_x+PR->p_w))||  //верх право h< w>
+((Y>PR->p_y)&&(Y<PR->p_y+PR->p_h)&&(X==PR->p_x+PR->p_w))                               //верх право h> w>
 )return 4;
 else return 0;
-}
-//---------------------------------------------------------------------------
-__fastcall TForm1::TForm1(TComponent* Owner)
-	: TForm(Owner)
-{
-
-}
-//---------------------------------------------------------------------------
-void __fastcall TForm1::FormCreate(TObject *Sender)
-{
-Form1->DoubleBuffered=true;   //буферизация графики
-
-PMap[0]=new NPrim;      //канва
-PMap[0]->type=0;
-PMap[0]->bcolor=clWhite;
-PMap[0]->pcolor=clBlack;
-PMap[0]->p_x=0;
-PMap[0]->p_y=0;
-PMap[0]->p_w=Form1->Width;
-PMap[0]->p_h=Form1->Height;
-
-PMap[1]=new NPrim;     //элемент для редактирования
-PMap[1]->type=0;
-PMap[1]->bcolor=clWhite;
-PMap[1]->pcolor=clBlue;
-BSet(true);   //дефолтные параметры рамки редактирования объекта
-}
-//---------------------------------------------------------------------------
-void __fastcall TForm1::FormPaint(TObject *Sender)
-{
-PDraw();  //отрисовываем холст
-}
-//---------------------------------------------------------------------------
-void __fastcall TForm1::FormClose(TObject *Sender, TCloseAction &Action)
-{
-for (unsigned int i = 0; i<PMap.size(); i++) delete PMap[i];
-PMap.clear();             //очищаем память
-}
-//---------------------------------------------------------------------------
-void __fastcall TForm1::SpeedButton1Click(TObject *Sender)
-{
-mode = 0;     //прямоугольник
-protect=true;
-}
-//---------------------------------------------------------------------------
-void __fastcall TForm1::SpeedButton2Click(TObject *Sender)
-{
-mode = 1;    //эллипс
-protect=true;
-}
-//---------------------------------------------------------------------------
-void __fastcall TForm1::SpeedButton3Click(TObject *Sender)
-{
-mode = 2;    // точка
-protect=true;
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormMouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
@@ -207,8 +176,8 @@ if ((mode >= 0)	&& (mode <100)&&(protect==true)) //если активен режим рисования
 	p_cur=p_count;
 	PMap[p_cur]=new NPrim;   //создаем новый примитив
 	PMap[p_cur]->type=mode;
-	PMap[p_cur]->bcolor=clWhite;
-	PMap[p_cur]->pcolor=clBlack;
+	PMap[p_cur]->bcolor=Form2->ColorGrid1->ForegroundColor;
+	PMap[p_cur]->pcolor=Form2->ColorGrid1->BackgroundColor;
 	PMap[p_cur]->p_x=X;
 	PMap[p_cur]->p_y=Y;
 	PMap[p_cur]->p_w=0;
