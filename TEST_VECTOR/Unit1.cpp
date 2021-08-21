@@ -30,14 +30,12 @@ map<int, NPrim*> PMap; //контейнер для хранения и обращения к примитивам вида: и
 int mode=100; //модификатор рисования фигур
 int p_cur=-1; //выбранный пользователем для работы примитив
 bool protect=false; //чтобы не спамились объекты при зажатии лкм
-int dragstate=0;
-int aaa;
+int dragstate=0; //состояние редактирования
 
-void PDraw()
+void PDraw()  //функция отрисовки примитивов
 {
 for (int i = 0; i < PMap.size(); i++)
 	{
-	aaa=i;
 	Form1->Canvas->Brush->Color=PMap[i]->bcolor;
 	Form1->Canvas->Pen->Color=PMap[i]->pcolor;;
 		switch (PMap[i]->type)
@@ -46,7 +44,7 @@ for (int i = 0; i < PMap.size(); i++)
 		break;
 		case 1: Form1->Canvas->Ellipse(PMap[i]->p_x,PMap[i]->p_y,(PMap[i]->p_x+PMap[i]->p_w),(PMap[i]->p_y+PMap[i]->p_h));
 		break;
-		case 2: Form1->Canvas->Ellipse(PMap[i]->p_x,PMap[i]->p_y,(PMap[i]->p_x+1),(PMap[i]->p_y+1));
+		case 2: Form1->Canvas->Ellipse(PMap[i]->p_x,PMap[i]->p_y,(PMap[i]->p_x+4),(PMap[i]->p_y+4));
 		break;
 		default:;
 		}
@@ -93,30 +91,30 @@ PMap[1]->p_h=0;
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormPaint(TObject *Sender)
 {
-PDraw();
+PDraw();  //отрисовываем холст
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormClose(TObject *Sender, TCloseAction &Action)
 {
-for (unsigned int j = 0; j<PMap.size(); j++) delete PMap[j];
-PMap.clear();
+for (unsigned int i = 0; i<PMap.size(); i++) delete PMap[i];
+PMap.clear();             //очищаем память
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::SpeedButton1Click(TObject *Sender)
 {
-mode = 0;
+mode = 0;     //прямоугольник
 protect=true;
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::SpeedButton2Click(TObject *Sender)
 {
-mode = 1;
+mode = 1;    //эллипс
 protect=true;
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::SpeedButton3Click(TObject *Sender)
 {
-mode = 2;
+mode = 2;    // точка
 protect=true;
 }
 //---------------------------------------------------------------------------
@@ -126,7 +124,7 @@ void __fastcall TForm1::FormMouseDown(TObject *Sender, TMouseButton Button, TShi
 if ((mode >= 0)	&& (mode <100)&&(protect==true)) //если активен режим рисования
 	{
 	p_cur=p_count;
-	PMap[p_cur]=new NPrim;
+	PMap[p_cur]=new NPrim;   //создаем новый примитив
 	PMap[p_cur]->type=mode;
 	PMap[p_cur]->bcolor=clWhite;
 	PMap[p_cur]->pcolor=clBlack;
@@ -150,18 +148,7 @@ switch (mode) //пространство для дальнейших изменений
 			PMap[1]->p_x=PMap[p_cur]->p_x-5;
 			PMap[1]->p_y=PMap[p_cur]->p_y-5;
 			PMap[1]->p_w=PMap[p_cur]->p_w+10;
-			PMap[1]->p_h=PMap[p_cur]->p_h+10;
-
-		Form1->Memo1->Clear();
-		Form1->Memo1->Lines->Add(PMap[p_cur]->p_x);
-		Form1->Memo1->Lines->Add(PMap[p_cur]->p_y);
-		Form1->Memo1->Lines->Add(PMap[p_cur]->p_w);
-		Form1->Memo1->Lines->Add(PMap[p_cur]->p_h);// */
-
-		Form1->Memo1->Lines->Add(PMap[1]->p_x);
-		Form1->Memo1->Lines->Add(PMap[1]->p_y);
-		Form1->Memo1->Lines->Add(PMap[1]->p_w);
-		Form1->Memo1->Lines->Add(PMap[1]->p_h); // */
+			PMap[1]->p_h=PMap[p_cur]->p_h+10;    //отрисовываем элементы редактирования
 			PDraw();
 			}
 			mode=101; //включаем режим активного элемента редактирования
@@ -180,7 +167,7 @@ void __fastcall TForm1::FormMouseMove(TObject *Sender, TShiftState Shift, int X,
 {
 if ((mode >= 0)	&& (mode <100)&& (protect==false)) //режим рисования
 	{
-	PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
+	PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;       //отрисовываем будующий примитив
 	PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
 	PDraw();
 	}
@@ -194,41 +181,55 @@ switch (mode) //пространство для дальнейших изменений
 		break;
 	case 101: //если пользователь кликнул в режиме активного элемента редактирования
 		{
-	if (dragstate==0) {
-
-
-		if (((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y)) || ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h)))
+	if (dragstate==0)
 		{
+		if (((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y)) || ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h)))
+		{   //выбор горизонтальной линии  (меняем курсор)
 		Form1->Cursor=-7;
-		dragstate=1;
+		dragstate=1;  //можно растягвать
 		}
 		else if (((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x)) || ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x+PMap[1]->p_w)))
-		{
+		{  //выбор вертикальной линии (меняем курсор)
 		Form1->Cursor=-9;
 		dragstate=1;
 		}
 		else
 		{
-		Form1->Cursor=0;
+		Form1->Cursor=0; //ушли от нужной линии - дефолтный курсор
 		dragstate=0;
 		}
 	}
-	else if (dragstate==2){
-			PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
-			PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
+	else if (dragstate==2)      //!!!тут
+		{
+		PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
+		PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
+		if (PMap[p_cur]->p_w>0)
+			{
 			PMap[1]->p_x=PMap[p_cur]->p_x-5;
-			PMap[1]->p_y=PMap[p_cur]->p_y-5;
 			PMap[1]->p_w=PMap[p_cur]->p_w+10;
+			}
+		else
+			{
+			PMap[1]->p_x=PMap[p_cur]->p_x+5;
+			PMap[1]->p_w=PMap[p_cur]->p_w-10;
+			}
+		if (PMap[p_cur]->p_h>0)
+			{
+			PMap[1]->p_y=PMap[p_cur]->p_y-5;
 			PMap[1]->p_h=PMap[p_cur]->p_h+10;
-
-			PDraw();
-	}
+			}
+        else
+			{
+			PMap[1]->p_y=PMap[p_cur]->p_y+5;
+			PMap[1]->p_h=PMap[p_cur]->p_h-10;
+			}
+		PDraw();
+		}
 	break;
 	default:;
 		}
 	}
 }
-
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormMouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
@@ -236,15 +237,19 @@ void __fastcall TForm1::FormMouseUp(TObject *Sender, TMouseButton Button, TShift
 {
 if ((mode >= 0)	&& (mode <100)&& (protect==false)) //если активен режим рисования
 	{
-	PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
+	PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;   //заканчиваем рисовать примитив
 	PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
 	PDraw();
 	p_cur=-1;
 	mode=100;
 	protect=true;
 	}
-
-if (dragstate==2)dragstate=1;
+if (dragstate==2)
+{
+Form1->Cursor=0;
+dragstate=0;
+Memo1->Lines->Add(mode);
+}
 }
 //---------------------------------------------------------------------------
 
