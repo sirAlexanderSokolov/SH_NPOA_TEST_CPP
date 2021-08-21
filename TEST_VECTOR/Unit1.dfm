@@ -16,32 +16,10 @@ object Form1: TForm1
   OnCreate = FormCreate
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
+  OnMouseUp = FormMouseUp
+  OnPaint = FormPaint
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
-    Left = 15
-    Top = 439
-    Width = 31
-    Height = 13
-    Caption = 'Label1'
-  end
-  object Image1: TImage
-    Left = 776
-    Top = 520
-    Width = 121
-    Height = 49
-    Transparent = True
-    OnMouseDown = Image1MouseDown
-    OnMouseMove = Image1MouseMove
-    OnMouseUp = Image1MouseUp
-  end
-  object Label2: TLabel
-    Left = 15
-    Top = 458
-    Width = 31
-    Height = 13
-    Caption = 'Label1'
-  end
   object Panel1: TPanel
     Left = 8
     Top = 8
