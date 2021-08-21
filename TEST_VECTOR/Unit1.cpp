@@ -260,14 +260,109 @@ switch (mode) //пространство для дальнейших изменений
 	{
 	case 0: case 1:  //если мышь наведена на элемент редактирования
 	{
-	if (((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y))
-	   || ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h)))
-		{   //навели на горизонтальную линии
+    Form1->Memo1->Clear();
+		Form1->Memo1->Lines->Add(PMap[1]->p_x);
+		Form1->Memo1->Lines->Add(PMap[1]->p_y);
+		Form1->Memo1->Lines->Add(PMap[1]->p_w);
+		Form1->Memo1->Lines->Add(PMap[1]->p_h);
+Form1->Memo1->Lines->Add(X);
+Form1->Memo1->Lines->Add(Y);
+
+	if (
+	(
+	(PMap[1]->p_w<0)&&
+	(PMap[1]->p_h<0)&&                                  //гор верх w< h<
+	(X<PMap[1]->p_x)&&
+	(X>PMap[1]->p_x+PMap[1]->p_w)&&
+	(Y==PMap[1]->p_y+PMap[1]->p_h)
+	)
+	||
+	(
+	(PMap[1]->p_w<0)&&
+	(PMap[1]->p_h<0)&&                                  //гор низ w<  h<
+	(X<PMap[1]->p_x)&&
+	(X>PMap[1]->p_x+PMap[1]->p_w)&&
+	(Y==PMap[1]->p_y)
+	)
+	||
+	(
+	(PMap[1]->p_w<0)&&
+	(PMap[1]->p_h>0)&&                                  //гор верх w<  h>    !!
+	(X<PMap[1]->p_x)&&
+	(X>PMap[1]->p_x+PMap[1]->p_w)&&
+	(Y==PMap[1]->p_y)
+	)
+	||
+	(
+	(PMap[1]->p_w<0)&&
+	(PMap[1]->p_h>0)&&                                  //гор низ w<  h>  !!
+	(X<PMap[1]->p_x)&&
+	(X>PMap[1]->p_x+PMap[1]->p_w)&&
+	(Y==PMap[1]->p_y+PMap[1]->p_h)
+	)
+	||
+	(
+	(X>PMap[1]->p_x)&&
+	(X<PMap[1]->p_x+PMap[1]->p_w)&&                      //гор верх w> h>
+	(Y==PMap[1]->p_y)
+	)
+	||
+	(
+	(X>PMap[1]->p_x)&&
+	(X<PMap[1]->p_x+PMap[1]->p_w)&&
+	(Y==PMap[1]->p_y+PMap[1]->p_h)                       //гор низ w>  h>
+	)
+	)
+		{   //навели на горизонтальную линии;
 		Form1->Cursor=-15; //меняем курсор
 		dragstate=1;  //разрешаем растягвать
 		}
-	else if (((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x))
-	   || ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x+PMap[1]->p_w)))
+	else if
+	(
+	(
+	(Y>PMap[1]->p_y)&&
+	(Y<PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h> w>
+	(X==PMap[1]->p_x)
+	)
+	||
+	(
+	(Y>PMap[1]->p_y)&&
+	(Y<PMap[1]->p_y+PMap[1]->p_h)&&                    //верт право h> w>
+	(X==PMap[1]->p_x+PMap[1]->p_w)
+	)
+	||
+	(
+	(PMap[1]->p_w<0)&&
+	(PMap[1]->p_h<0)&&
+	(Y<PMap[1]->p_y)&&
+	(Y>PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h< w<
+	(X==PMap[1]->p_x+PMap[1]->p_w)
+	)
+	||
+	(
+	(PMap[1]->p_w<0)&&
+	(PMap[1]->p_h<0)&&
+	(Y<PMap[1]->p_y)&&
+	(Y>PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h<  w<
+	(X==PMap[1]->p_x)
+	)
+	||
+	(
+	(PMap[1]->p_w>0)&&
+	(PMap[1]->p_h<0)&&
+	(Y<PMap[1]->p_y)&&
+	(Y>PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h< w>
+	(X==PMap[1]->p_x)
+	)
+	||
+	(
+	(PMap[1]->p_w>0)&&
+	(PMap[1]->p_h<0)&&
+	(Y<PMap[1]->p_y)&&
+	(Y>PMap[1]->p_y+PMap[1]->p_h)&&                    //верт лево h<  w>
+	(X==PMap[1]->p_x+PMap[1]->p_w)
+	)
+    )
 		{  //навели на вертикальную линии
 		Form1->Cursor=-14; //меняем курсор
 		dragstate=1;   //разрешаем растягвать
@@ -343,11 +438,7 @@ if ((mode >= 0)	&& (mode <100)&& (protect==false)) //если активен режим рисовани
 	{
 	PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;   //заканчиваем рисовать примитив
 	PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
-	Form1->Memo1->Clear();
-		Form1->Memo1->Lines->Add(PMap[p_cur]->p_x);
-		Form1->Memo1->Lines->Add(PMap[p_cur]->p_y);
-		Form1->Memo1->Lines->Add(PMap[p_cur]->p_w);
-		Form1->Memo1->Lines->Add(PMap[p_cur]->p_h);
+
 	protect=true;
     p_cur=-1;
 	mode=100;
@@ -361,8 +452,13 @@ Form1->Cursor=0;
 p_cur=-1;
 mode=100;
 }
-Form1->Memo1->Lines->Add(Y);
+Form1->Memo1->Clear();
+		Form1->Memo1->Lines->Add(PMap[1]->p_x);
+		Form1->Memo1->Lines->Add(PMap[1]->p_y);
+		Form1->Memo1->Lines->Add(PMap[1]->p_w);
+		Form1->Memo1->Lines->Add(PMap[1]->p_h);
 Form1->Memo1->Lines->Add(X);
+Form1->Memo1->Lines->Add(Y);
 PDraw();
 }
 //---------------------------------------------------------------------------
