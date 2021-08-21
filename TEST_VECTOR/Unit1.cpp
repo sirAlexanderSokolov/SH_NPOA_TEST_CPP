@@ -11,7 +11,7 @@
 
 //функции поворота
 //увеличить область захвата примитива
-//если рисуют справа налево снизу вверх
+//если рисуют справа налево снизу вверх поправить выделение редактора
 
 TForm1 *Form1;
 
@@ -62,13 +62,25 @@ for (int i = 0; i < PMap.size(); i++)
 }
 //---------------------------------------------------------------------------
 int PickP(int x, int y)//выделение примитива на холсте для редактирования - выбор его индекса
+{
+for(int i=PMap.size()-1; i>=1;i--) //можно оптимизировать - вынести в базовый класс
 	{
-	for(int i=PMap.size()-1; i>=1;i--) //можно оптимизировать - вынести в базовый класс
+	if (i==1) return -1;
+	else
 		{
-		if (i==1) return -1;
-		else if ((x>=PMap[i]->p_x) && (x<=PMap[i]->p_x+PMap[i]->p_w) &&	(y>=PMap[i]->p_y) && (y<=PMap[i]->p_y+PMap[i]->p_h))return i;
+		if (PMap[i]->p_w<0)
+			{
+			if ((PMap[i]->p_h<0)) //w< h<
+				{
+				if ((x<=PMap[i]->p_x) && (x>=PMap[i]->p_x+PMap[i]->p_w) &&	(y<=PMap[i]->p_y) && (y>=PMap[i]->p_y+PMap[i]->p_h)) return i;
+				}
+				else if ((x<=PMap[i]->p_x) && (x>=PMap[i]->p_x+PMap[i]->p_w) &&	(y>=PMap[i]->p_y) && (y<=PMap[i]->p_y+PMap[i]->p_h)) return i;//w< h>
+			}
+			else if ((PMap[i]->p_h<0)&&(x>=PMap[i]->p_x) && (x<=PMap[i]->p_x+PMap[i]->p_w) &&	(y<=PMap[i]->p_y) && (y>=PMap[i]->p_y+PMap[i]->p_h)) return i; //w> h<
+		else if ((x>=PMap[i]->p_x) && (x<=PMap[i]->p_x+PMap[i]->p_w) &&	(y>=PMap[i]->p_y) && (y<=PMap[i]->p_y+PMap[i]->p_h)) return i; //w> h>
 		}
 	}
+}
 //---------------------------------------------------------------------------
 void BSet(bool Default)  //вычисление параметров рамки
 {
@@ -331,9 +343,15 @@ if ((mode >= 0)	&& (mode <100)&& (protect==false)) //если активен режим рисовани
 	{
 	PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;   //заканчиваем рисовать примитив
 	PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
+	Form1->Memo1->Clear();
+		Form1->Memo1->Lines->Add(PMap[p_cur]->p_x);
+		Form1->Memo1->Lines->Add(PMap[p_cur]->p_y);
+		Form1->Memo1->Lines->Add(PMap[p_cur]->p_w);
+		Form1->Memo1->Lines->Add(PMap[p_cur]->p_h);
 	protect=true;
     p_cur=-1;
 	mode=100;
+
 	}
 else if (((dragstate>=2)&&(mode==101))||(mode==100))
 {
@@ -343,6 +361,8 @@ Form1->Cursor=0;
 p_cur=-1;
 mode=100;
 }
+Form1->Memo1->Lines->Add(Y);
+Form1->Memo1->Lines->Add(X);
 PDraw();
 }
 //---------------------------------------------------------------------------
