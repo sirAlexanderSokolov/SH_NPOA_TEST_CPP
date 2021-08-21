@@ -30,6 +30,7 @@ map<int, NPrim*> PMap; //контейнер для хранения и обращения к примитивам вида: и
 int mode=100; //модификатор рисования фигур
 int p_cur=-1; //выбранный пользователем для работы примитив
 bool protect=false; //чтобы не спамились объекты при зажатии лкм
+int dragstate=0;
 int aaa;
 
 void PDraw()
@@ -168,14 +169,8 @@ switch (mode) //пространство для дальнейших изменений
 		break;
 	case 101: //если пользователь кликнул в режиме активного элемента редактирования
 		{
-	   /*	ctr_tmp1=prim_tmp1->IsCursorOnControl(x,y); //выясняем индекс элемента управления по которому кликнул пользователь
-		if (ctr_tmp1 >= 0) // если пользователь попал по элементу управления/рамке
-		{
-		mode=102; //включаем непосредственно режим изменения объекта
-		Form1->Cursor = prim_tmp1->ctr[ctr_tmp1].c_cursor;
-		}
-	break;
-	default:;   */
+		if (dragstate==1)dragstate=2;
+		else mode = 100;
 		}
 	}
 }
@@ -189,6 +184,51 @@ if ((mode >= 0)	&& (mode <100)&& (protect==false)) //режим рисования
 	PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
 	PDraw();
 	}
+else
+{
+switch (mode) //пространство для дальнейших изменений
+	{
+	case 100: //если пользователь кликнул в "пустом" режиме
+		{
+		}
+		break;
+	case 101: //если пользователь кликнул в режиме активного элемента редактирования
+		{
+	if (dragstate==0) {
+
+
+		if (((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y)) || ((X>PMap[1]->p_x)&&(X<PMap[1]->p_x+PMap[1]->p_w)&&(Y==PMap[1]->p_y+PMap[1]->p_h)))
+		{
+		Form1->Cursor=-7;
+		dragstate=1;
+		}
+		else if (((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x)) || ((Y>PMap[1]->p_y)&&(Y<PMap[1]->p_y+PMap[1]->p_h)&&(X==PMap[1]->p_x+PMap[1]->p_w)))
+		{
+		Form1->Cursor=-9;
+		dragstate=1;
+		}
+		else
+		{
+		Form1->Cursor=0;
+		dragstate=0;
+		}
+	}
+	else if (dragstate==2){
+			PMap[p_cur]->p_w=X-PMap[p_cur]->p_x;
+			PMap[p_cur]->p_h=Y-PMap[p_cur]->p_y;
+			PMap[1]->p_x=PMap[p_cur]->p_x-5;
+			PMap[1]->p_y=PMap[p_cur]->p_y-5;
+			PMap[1]->p_w=PMap[p_cur]->p_w+10;
+			PMap[1]->p_h=PMap[p_cur]->p_h+10;
+
+			PDraw();
+	}
+	break;
+	default:;
+		}
+	}
+}
+
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormMouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
@@ -203,6 +243,8 @@ if ((mode >= 0)	&& (mode <100)&& (protect==false)) //если активен режим рисовани
 	mode=100;
 	protect=true;
 	}
+
+if (dragstate==2)dragstate=1;
 }
 //---------------------------------------------------------------------------
 
